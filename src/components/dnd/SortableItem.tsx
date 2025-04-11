@@ -1,4 +1,3 @@
-// src/components/dnd/SortableItem.tsx
 import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -8,11 +7,6 @@ interface SortableItemProps {
   children: React.ReactNode;
   className?: string;
   handle?: boolean;
-}
-
-// Define a type for children that can accept drag handle props
-interface WithDragHandleProps {
-  dragHandleProps?: any;
 }
 
 const SortableItem: React.FC<SortableItemProps> = ({
@@ -32,7 +26,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    // transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 999 : "auto",
   };

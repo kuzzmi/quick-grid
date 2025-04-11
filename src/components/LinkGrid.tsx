@@ -7,12 +7,14 @@ import { Link, GridSettings } from "../types";
 import LinkItem from "./LinkItem";
 import EditLinkModal from "./EditLinkModal";
 import SortableItem from "./dnd/SortableItem";
+import NewLinkItem from "./NewLinkItem";
 
 interface LinkGridProps {
   links: Link[];
   settings: GridSettings;
   onUpdateLink: (link: Link) => void;
   onDeleteLink: (id: string) => void;
+  onAddLink: () => void;
 }
 
 const LinkGrid: React.FC<LinkGridProps> = ({
@@ -20,6 +22,7 @@ const LinkGrid: React.FC<LinkGridProps> = ({
   settings,
   onUpdateLink,
   onDeleteLink,
+  onAddLink,
 }) => {
   const [editingLink, setEditingLink] = useState<Link | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -59,6 +62,9 @@ const LinkGrid: React.FC<LinkGridProps> = ({
               </p>
             </div>
           )}
+          <SortableItem key={0} id="0">
+            <NewLinkItem size={settings.itemSize} onClick={onAddLink} />
+          </SortableItem>
         </div>
       </SortableContext>
 

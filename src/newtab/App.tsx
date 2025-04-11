@@ -24,7 +24,6 @@ import LinkGrid from "../components/LinkGrid";
 import AddLinkModal from "../components/AddLinkModal";
 import AddGroupModal from "../components/AddGroupModal";
 import SettingsModal from "../components/SettingsModal";
-import SortableItem from "../components/dnd/SortableItem";
 import { arrayMove, findIndices } from "../components/dnd/utils";
 
 const App: React.FC = () => {
@@ -276,6 +275,7 @@ const App: React.FC = () => {
                   links={activeGroupLinks}
                   onDeleteLink={deleteLink}
                   onUpdateLink={updateLink}
+                  onAddLink={() => setIsAddLinkModalOpen(true)}
                   settings={state.settings}
                 />
               </div>

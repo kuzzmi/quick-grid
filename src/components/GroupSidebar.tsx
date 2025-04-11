@@ -42,9 +42,10 @@ const GroupItem = ({
 
   return (
     <div
-      className={`flex items-center justify-between p-3 rounded-md cursor-pointer relative ${
+      ref={setDroppableRef}
+      className={`flex items-center justify-between p-3 rounded-md cursor-pointer ${
         isActive ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100"
-      }`}
+      } ${isOver ? "border-2 border-green-400" : ""}`}
       onClick={() => onSelectGroup(group.id)}
     >
       <div className="flex items-center flex-1 min-w-0">
@@ -67,16 +68,6 @@ const GroupItem = ({
           <Trash2 size={14} />
         </button>
       </div>
-
-      {/* Drop zone indicator for links */}
-      <div
-        ref={setDroppableRef}
-        className={`absolute left-0 right-0 top-0 bottom-0 inset-0 rounded-md ${
-          isOver
-            ? "bg-green-100 border-2 border-green-400 opacity-60"
-            : "opacity-0 pointer-events-none"
-        }`}
-      ></div>
     </div>
   );
 };
