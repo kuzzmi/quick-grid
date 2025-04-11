@@ -1,10 +1,22 @@
 import React, { useState, useEffect } from "react";
 import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  OnDragEndResponder,
-} from "react-beautiful-dnd";
+  DndContext,
+  closestCenter,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  KeyboardSensor,
+  Active,
+  Over,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { Plus, Settings } from "react-feather";
 import { useApp } from "../AppContext";
 import GroupSidebar from "../components/GroupSidebar";
@@ -12,6 +24,8 @@ import LinkGrid from "../components/LinkGrid";
 import AddLinkModal from "../components/AddLinkModal";
 import AddGroupModal from "../components/AddGroupModal";
 import SettingsModal from "../components/SettingsModal";
+import SortableItem from "../components/dnd/SortableItem";
+import { arrayMove, findIndices } from "../components/dnd/utils";
 
 const App: React.FC = () => {
   const {
@@ -31,9 +45,24 @@ const App: React.FC = () => {
   const [isAddLinkModalOpen, setIsAddLinkModalOpen] = useState(false);
   const [isAddGroupModalOpen, setIsAddGroupModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeType, setActiveType] = useState<"GROUP" | "LINK" | null>(null);
+
+  // Configure sensors for drag and drop interactions
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px movement required to start dragging
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   // Sort groups by order
   const sortedGroups = [...state.groups].sort((a, b) => a.order - b.order);
+  const groupIds = sortedGroups.map((group) => `group-${group.id}`);
 
   // Get active group
   const activeGroup = state.activeGroupId
@@ -54,110 +83,144 @@ const App: React.FC = () => {
     }
   }, [state.activeGroupId, sortedGroups, setActiveGroup]);
 
-  // Handle drag end
-  const handleDragEnd: OnDragEndResponder = (result) => {
-    const { source, destination, type, draggableId } = result;
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    setActiveId(active.id as string);
 
-    // Dropped outside a droppable area
-    if (!destination) return;
-
-    // No movement
-    if (
-      source.droppableId === destination.droppableId &&
-      source.index === destination.index
-    ) {
-      return;
-    }
-
-    // Handle group reordering
-    if (type === "GROUP") {
-      const newGroups = [...sortedGroups];
-      const [removed] = newGroups.splice(source.index, 1);
-      newGroups.splice(destination.index, 0, removed);
-
-      reorderGroups(newGroups.map((group) => group.id));
-      return;
-    }
-
-    // Handle link reordering within same group
-    if (source.droppableId === destination.droppableId) {
-      const groupId = source.droppableId.replace("group-", "");
-      const groupLinks = state.links
-        .filter((link) => link.groupId === groupId)
-        .sort((a, b) => a.order - b.order);
-
-      const newLinks = [...groupLinks];
-      const [removed] = newLinks.splice(source.index, 1);
-      newLinks.splice(destination.index, 0, removed);
-
-      reorderLinks(
-        newLinks.map((link) => link.id),
-        groupId,
-      );
-      return;
-    }
-
-    // Handle link moving between groups
-    if (source.droppableId !== destination.droppableId) {
-      // Find the link being moved
-      const linkId = draggableId;
-      const link = state.links.find((link) => link.id === linkId);
-      if (!link) return;
-
-      // Source group links
-      const sourceGroupId = source.droppableId.replace("group-", "");
-      const sourceGroupLinks = state.links
-        .filter((link) => link.groupId === sourceGroupId)
-        .sort((a, b) => a.order - b.order);
-
-      // Destination group links
-      const destGroupId = destination.droppableId.replace("group-", "");
-      const destGroupLinks = state.links
-        .filter((link) => link.groupId === destGroupId)
-        .sort((a, b) => a.order - b.order);
-
-      // Remove link from source group
-      const newSourceLinks = [...sourceGroupLinks];
-      newSourceLinks.splice(source.index, 1);
-
-      // Add link to destination group
-      const newDestLinks = [...destGroupLinks];
-      newDestLinks.splice(destination.index, 0, {
-        ...link,
-        groupId: destGroupId,
-      });
-
-      // Update link with new group
-      updateLink({
-        ...link,
-        groupId: destGroupId,
-        order: destination.index,
-      });
-
-      // Reorder source group links
-      if (newSourceLinks.length > 0) {
-        reorderLinks(
-          newSourceLinks.map((link) => link.id),
-          sourceGroupId,
-        );
-      }
-
-      // Reorder destination group links
-      reorderLinks(
-        newDestLinks.map((link) => link.id),
-        destGroupId,
-      );
-
-      // If the active group was the source group, switch to destination group
-      if (sourceGroupId === state.activeGroupId) {
-        setActiveGroup(destGroupId);
+    // Determine if we're dragging a group or a link
+    if (typeof active.id === "string") {
+      if (active.id.startsWith("group-")) {
+        setActiveType("GROUP");
+      } else {
+        setActiveType("LINK");
       }
     }
   };
 
+  const handleDragOver = (event: DragOverEvent) => {
+    // Handle dragging links between groups
+    const { active, over } = event;
+
+    if (!over || !activeType || activeType !== "LINK") return;
+
+    // If dragging over a group drop area
+    if (typeof over.id === "string" && over.id.startsWith("group-")) {
+      const activeId = active.id as string;
+      const linkToMove = state.links.find((link) => link.id === activeId);
+
+      if (!linkToMove) return;
+
+      const targetGroupId = over.id.replace("group-", "");
+
+      // If already in the target group, do nothing
+      if (linkToMove.groupId === targetGroupId) return;
+
+      // Update the link to the new group temporarily in the UI
+      // (we'll make the actual change in handleDragEnd)
+      updateLink({
+        ...linkToMove,
+        groupId: targetGroupId,
+      });
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over) {
+      setActiveId(null);
+      setActiveType(null);
+      return;
+    }
+
+    // Handle group reordering
+    if (
+      activeType === "GROUP" &&
+      typeof active.id === "string" &&
+      typeof over.id === "string"
+    ) {
+      const activeGroupId = active.id.replace("group-", "");
+      const overGroupId = over.id.replace("group-", "");
+
+      if (activeGroupId !== overGroupId) {
+        const { activeIndex, overIndex } = findIndices(
+          sortedGroups,
+          activeGroupId,
+          overGroupId,
+        );
+
+        if (activeIndex !== -1 && overIndex !== -1) {
+          const newGroups = arrayMove(sortedGroups, activeIndex, overIndex);
+          reorderGroups(newGroups.map((group) => group.id));
+        }
+      }
+    }
+
+    // Handle link reordering and moving between groups
+    else if (activeType === "LINK") {
+      const activeId = active.id as string;
+      const linkToMove = state.links.find((link) => link.id === activeId);
+
+      if (!linkToMove) return;
+
+      // If dropped over a group (from handleDragOver), we've already updated the UI
+      // We just need to finalize the order in the target group
+      if (typeof over.id === "string" && over.id.startsWith("group-")) {
+        const targetGroupId = over.id.replace("group-", "");
+        const targetGroupLinks = state.links
+          .filter((link) => link.groupId === targetGroupId)
+          .sort((a, b) => a.order - b.order);
+
+        // Add the moved link to the end of the group
+        const newLinks = [...targetGroupLinks, linkToMove];
+
+        // Update the order
+        reorderLinks(
+          newLinks.map((link) => link.id),
+          targetGroupId,
+        );
+      }
+      // Handle regular link reordering within the same group
+      else if (typeof over.id === "string") {
+        const overId = over.id as string;
+        const overLink = state.links.find((link) => link.id === overId);
+
+        if (!overLink || linkToMove.groupId !== overLink.groupId) return;
+
+        const groupLinks = state.links
+          .filter((link) => link.groupId === linkToMove.groupId)
+          .sort((a, b) => a.order - b.order);
+
+        const { activeIndex, overIndex } = findIndices(
+          groupLinks,
+          activeId,
+          overId,
+        );
+
+        if (activeIndex !== -1 && overIndex !== -1) {
+          const newLinks = arrayMove(groupLinks, activeIndex, overIndex);
+
+          reorderLinks(
+            newLinks.map((link) => link.id),
+            linkToMove.groupId,
+          );
+        }
+      }
+    }
+
+    setActiveId(null);
+    setActiveType(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <DragDropContext onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
         <div className="flex">
           {/* Left Sidebar with Groups */}
           <div className="w-64 bg-white shadow-md min-h-screen p-4 border-r border-gray-200">
@@ -180,14 +243,19 @@ const App: React.FC = () => {
               Add Group
             </button>
 
-            <GroupSidebar
-              groups={sortedGroups}
-              activeGroupId={state.activeGroupId}
-              onSelectGroup={setActiveGroup}
-              onAddGroup={() => setIsAddGroupModalOpen(true)}
-              onUpdateGroup={updateGroup}
-              onDeleteGroup={deleteGroup}
-            />
+            <SortableContext
+              items={groupIds}
+              strategy={verticalListSortingStrategy}
+            >
+              <GroupSidebar
+                groups={sortedGroups}
+                activeGroupId={state.activeGroupId}
+                onSelectGroup={setActiveGroup}
+                onAddGroup={() => setIsAddGroupModalOpen(true)}
+                onUpdateGroup={updateGroup}
+                onDeleteGroup={deleteGroup}
+              />
+            </SortableContext>
           </div>
 
           {/* Main Content Area */}
@@ -204,13 +272,11 @@ const App: React.FC = () => {
                     Add Link
                   </button>
                 </div>
-
                 <LinkGrid
                   links={activeGroupLinks}
-                  groupId={activeGroup.id}
-                  settings={state.settings}
-                  onUpdateLink={updateLink}
                   onDeleteLink={deleteLink}
+                  onUpdateLink={updateLink}
+                  settings={state.settings}
                 />
               </div>
             ) : (
@@ -229,7 +295,7 @@ const App: React.FC = () => {
             )}
           </div>
         </div>
-      </DragDropContext>
+      </DndContext>
 
       {/* Modals */}
       {isAddLinkModalOpen && (
