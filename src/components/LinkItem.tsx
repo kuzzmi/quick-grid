@@ -37,7 +37,7 @@ const LinkItem: React.FC<LinkItemProps> = ({
 
   const getFallbackIconUrl = () => {
     // In browser mode, use Google's favicon service
-    return `https://www.google.com/s2/favicons?domain=${new URL(link.url).hostname}&sz=32`;
+    return `https://www.google.com/s2/favicons?domain=${new URL(link.url).hostname}&sz=128`;
   };
 
   return (
