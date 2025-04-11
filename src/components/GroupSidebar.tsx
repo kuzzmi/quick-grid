@@ -70,7 +70,7 @@ const GroupSidebar: React.FC<GroupSidebarProps> = ({
             {groups.map((group, index) => (
               <Draggable
                 key={group.id}
-                draggableId={group.id}
+                draggableId={`group-${group.id}`}
                 index={index}
                 isDragDisabled={renamingGroupId === group.id}
               >
@@ -78,7 +78,8 @@ const GroupSidebar: React.FC<GroupSidebarProps> = ({
                   <div
                     ref={provided.innerRef}
                     {...provided.draggableProps}
-                    className={`flex items-center justify-between p-3 rounded-md cursor-pointer ${
+                    {...provided.dragHandleProps}
+                    className={`flex items-center justify-between p-3 rounded-md cursor-pointer relative ${
                       activeGroupId === group.id
                         ? "bg-blue-100 text-blue-700"
                         : "hover:bg-gray-100"
@@ -86,13 +87,6 @@ const GroupSidebar: React.FC<GroupSidebarProps> = ({
                     onClick={() => onSelectGroup(group.id)}
                   >
                     <div className="flex items-center flex-1 min-w-0">
-                      <div
-                        {...provided.dragHandleProps}
-                        className="mr-2 text-gray-400 hover:text-gray-700 cursor-move"
-                      >
-                        <Menu size={16} />
-                      </div>
-
                       {renamingGroupId === group.id ? (
                         <input
                           type="text"
@@ -130,24 +124,17 @@ const GroupSidebar: React.FC<GroupSidebarProps> = ({
 
                     {/* Drop zone indicator for links - visible only when dragging */}
                     <Droppable droppableId={`group-${group.id}`} type="LINK">
-                      {(provided, snapshot) => (
+                      {(providedDroppable, snapshot) => (
                         <div
-                          ref={provided.innerRef}
-                          {...provided.droppableProps}
-                          className={`absolute inset-0 rounded-md ${
+                          ref={providedDroppable.innerRef}
+                          {...providedDroppable.droppableProps}
+                          className={`absolute left-0 right-0 top-0 bottom-0 inset-0 rounded-md ${
                             snapshot.isDraggingOver
                               ? "bg-green-100 border-2 border-green-400 opacity-60"
-                              : "opacity-0"
+                              : "opacity-0 pointer-events-none"
                           }`}
                         >
-                          {provided.placeholder}
-                          {snapshot.isDraggingOver && (
-                            <div className="flex items-center justify-center h-full">
-                              <span className="text-sm font-medium text-green-800">
-                                Drop to move to this group
-                              </span>
-                            </div>
-                          )}
+                          {providedDroppable.placeholder}
                         </div>
                       )}
                     </Droppable>

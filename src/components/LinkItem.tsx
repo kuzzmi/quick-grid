@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "../types";
-import { Trash2, Edit } from "react-feather";
+import { Trash2, Edit, Move } from "react-feather";
 
 export interface LinkItemProps {
   link: Link;
@@ -8,6 +8,7 @@ export interface LinkItemProps {
   onDelete: (id: string) => void;
   showTitle: boolean;
   size: "small" | "medium" | "large";
+  dragHandleProps?: any; // For the drag handle
 }
 
 const LinkItem: React.FC<LinkItemProps> = ({
@@ -16,6 +17,7 @@ const LinkItem: React.FC<LinkItemProps> = ({
   onDelete,
   showTitle,
   size,
+  dragHandleProps,
 }) => {
   const handleClick = () => {
     window.open(link.url, "_blank");
@@ -33,6 +35,11 @@ const LinkItem: React.FC<LinkItemProps> = ({
     }
   };
 
+  const getFallbackIconUrl = () => {
+    // In browser mode, use Google's favicon service
+    return `https://www.google.com/s2/favicons?domain=${new URL(link.url).hostname}&sz=32`;
+  };
+
   return (
     <div className="group relative flex flex-col items-center p-2 rounded-lg hover:bg-gray-100">
       <div
@@ -47,16 +54,14 @@ const LinkItem: React.FC<LinkItemProps> = ({
           />
         ) : (
           <img
-            src={
-              link.iconUrl ||
-              `https://www.google.com/s2/favicons?domain=${link.url}&sz=128`
-            }
+            src={link.iconUrl || getFallbackIconUrl()}
             alt={link.title}
             className="max-w-full max-h-full object-contain"
             onError={(e) => {
               // Fallback if favicon loading fails
               const target = e.target as HTMLImageElement;
-              target.src = "icons/default-icon.png";
+              target.src =
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="12" cy="12" r="4"></circle></svg>';
             }}
           />
         )}
@@ -68,8 +73,16 @@ const LinkItem: React.FC<LinkItemProps> = ({
         </div>
       )}
 
+      {/* Drag handle in top-left corner - visible on hover */}
+      <div
+        className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-move z-10"
+        {...dragHandleProps}
+      >
+        <Move size={16} className="text-gray-500 hover:text-gray-700" />
+      </div>
+
       {/* Edit and delete controls - visible on hover */}
-      <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
         <button
           onClick={(e) => {
             e.stopPropagation();
