@@ -43,9 +43,12 @@ const GroupItem = ({
   return (
     <div
       ref={setDroppableRef}
-      className={`flex items-center justify-between p-3 rounded-md cursor-pointer ${
-        isActive ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100"
-      } ${isOver ? "border-2 border-green-400" : ""}`}
+      className={`flex items-center justify-between p-3 rounded-md cursor-pointer dark:text-gray-50
+        ${
+          isActive
+            ? "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-50"
+            : "hover:bg-gray-100 dark:hover:bg-gray-600"
+        } ${isOver ? "border-2 border-green-400" : ""}`}
       onClick={() => onSelectGroup(group.id)}
     >
       <div className="flex items-center flex-1 min-w-0">
@@ -55,7 +58,7 @@ const GroupItem = ({
       <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={(e) => onStartRenaming(group, e)}
-          className="p-1 text-gray-500 hover:text-blue-500"
+          className="p-1 text-gray-500 hover:text-gray-500"
           aria-label="Rename group"
         >
           <Edit size={14} />

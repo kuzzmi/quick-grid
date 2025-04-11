@@ -24,9 +24,9 @@ const NewLinkItem: React.FC<NewLinkItemProps> = ({ onClick, size }) => {
   };
 
   return (
-    <div className="group relative flex flex-1 h-full flex-col items-center p-2 rounded-lg hover:bg-gray-100">
+    <div className="group relative flex flex-1 h-full flex-col items-center p-2 rounded-lg hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-500">
       <div
-        className={`flex flex-1 h-full justify-center items-center cursor-pointer ${getSizeClass()}`}
+        className={`flex flex-1 h-full justify-center items-center cursor-pointer ${getSizeClass()} dark:text-white`}
         onClick={handleClick}
       >
         <Plus />

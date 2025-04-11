@@ -41,7 +41,7 @@ const LinkItem: React.FC<LinkItemProps> = ({
   };
 
   return (
-    <div className="group relative flex flex-col items-center p-2 rounded-lg hover:bg-gray-100">
+    <div className="group relative flex flex-col items-center p-4 rounded-lg dark:hover:bg-gray-500 hover:bg-gray-100 bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500">
       <div
         className={`flex justify-center items-center cursor-pointer ${getSizeClass()}`}
         onClick={handleClick}
@@ -68,7 +68,7 @@ const LinkItem: React.FC<LinkItemProps> = ({
       </div>
 
       {showTitle && (
-        <div className="mt-2 text-center text-sm text-gray-800 truncate w-full">
+        <div className="mt-2 text-center text-[0.75rem] text-gray-900 dark:text-white truncate w-full">
           {link.title}
         </div>
       )}

@@ -41,7 +41,7 @@ const LinkGrid: React.FC<LinkGridProps> = ({
   return (
     <div>
       <SortableContext items={itemIds} strategy={horizontalListSortingStrategy}>
-        <div className="grid gap-4" style={{ gridTemplateColumns }}>
+        <div className="grid gap-6" style={{ gridTemplateColumns }}>
           {links.length > 0 ? (
             links.map((link) => (
               <SortableItem key={link.id} id={link.id}>
@@ -55,7 +55,7 @@ const LinkGrid: React.FC<LinkGridProps> = ({
               </SortableItem>
             ))
           ) : (
-            <div className="col-span-full py-10 flex flex-col items-center justify-center bg-white rounded-lg border border-gray-200">
+            <div className="col-span-full py-10 flex flex-col items-center justify-center bg-white rounded-lg dark:bg-gray-700 border border-gray-200 dark:border-gray-500">
               <p className="text-gray-500 mb-2">No links in this group yet</p>
               <p className="text-sm text-gray-400">
                 Add links using the button above or drag from another group

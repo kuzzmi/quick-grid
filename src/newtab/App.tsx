@@ -9,8 +9,6 @@ import {
   useSensors,
   PointerSensor,
   KeyboardSensor,
-  Active,
-  Over,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -44,7 +42,6 @@ const App: React.FC = () => {
   const [isAddLinkModalOpen, setIsAddLinkModalOpen] = useState(false);
   const [isAddGroupModalOpen, setIsAddGroupModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [activeId, setActiveId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<"GROUP" | "LINK" | null>(null);
 
   // Configure sensors for drag and drop interactions
@@ -84,7 +81,6 @@ const App: React.FC = () => {
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    setActiveId(active.id as string);
 
     // Determine if we're dragging a group or a link
     if (typeof active.id === "string") {
@@ -127,7 +123,6 @@ const App: React.FC = () => {
     const { active, over } = event;
 
     if (!over) {
-      setActiveId(null);
       setActiveType(null);
       return;
     }
@@ -207,12 +202,11 @@ const App: React.FC = () => {
       }
     }
 
-    setActiveId(null);
     setActiveType(null);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -222,9 +216,11 @@ const App: React.FC = () => {
       >
         <div className="flex">
           {/* Left Sidebar with Groups */}
-          <div className="w-64 bg-white shadow-md min-h-screen p-4 border-r border-gray-200">
+          <div className="w-64 bg-white dark:bg-gray-700 min-h-screen p-4 border-r border-gray-200 dark:border-gray-600 fixed">
             <div className="flex justify-between items-center mb-6">
-              <h1 className="text-xl font-bold text-gray-800">QuickGrid</h1>
+              <h1 className="text-xl font-bold text-gray-800 dark:text-gray-300">
+                QuickGrid
+              </h1>
               <button
                 onClick={() => setIsSettingsModalOpen(true)}
                 className="p-1 rounded-full hover:bg-gray-100"
@@ -236,7 +232,7 @@ const App: React.FC = () => {
 
             <button
               onClick={() => setIsAddGroupModalOpen(true)}
-              className="w-full flex items-center justify-center px-4 py-2 mb-6 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              className="w-full flex items-center justify-center px-4 py-2 mb-6 bg-gray-500 dark:bg-gray-900 text-white rounded-md hover:bg-blue-600"
             >
               <Plus size={16} className="mr-1" />
               Add Group
@@ -257,19 +253,12 @@ const App: React.FC = () => {
             </SortableContext>
           </div>
 
-          {/* Main Content Area */}
-          <div className="flex-1 p-6">
+          {/* Main Content Area - Centered */}
+          <div className="flex flex-1 items-center justify-center min-h-screen">
             {activeGroup ? (
-              <div>
-                <div className="flex justify-between items-center mb-6">
+              <div className="w-[50%] min-w-[600px] max-w-[1000px] min-h-[620px] py-6">
+                <div className="flex justify-between items-center mb-6 dark:text-gray-300">
                   <h2 className="text-xl font-bold">{activeGroup.title}</h2>
-                  <button
-                    onClick={() => setIsAddLinkModalOpen(true)}
-                    className="flex items-center px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-                  >
-                    <Plus size={16} className="mr-1" />
-                    Add Link
-                  </button>
                 </div>
                 <LinkGrid
                   links={activeGroupLinks}

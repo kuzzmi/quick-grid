@@ -20,7 +20,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
     listeners,
     setNodeRef,
     transform,
-    transition,
+    // transition,
     isDragging,
   } = useSortable({ id });
 
