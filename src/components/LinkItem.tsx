@@ -20,7 +20,8 @@ const LinkItem: React.FC<LinkItemProps> = ({
   dragHandleProps,
 }) => {
   const handleClick = () => {
-    window.open(link.url, "_blank");
+    // window.open(link.url, "same");
+    window.location.href = link.url;
   };
 
   const getSizeClass = () => {

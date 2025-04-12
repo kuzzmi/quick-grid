@@ -12,7 +12,8 @@ export const getFaviconUrl = (url: string): string => {
 
     if (isExtensionMode()) {
       // Chrome extension mode - use the chrome favicon API
-      return `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=128`;
+      // return `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=128`;
+      return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=128`;
     } else {
       // Browser mode - use Google's favicon service
       return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=128`;
