@@ -49,6 +49,33 @@ const defaultState: AppState = {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+// Add these constants at the top of the file
+const STORAGE_KEY_ACTIVE_GROUP = "quickgrid_active_group";
+
+// Function to load the active group from localStorage
+const loadActiveGroupFromStorage = (): string | null => {
+  try {
+    const storedGroupId = localStorage.getItem(STORAGE_KEY_ACTIVE_GROUP);
+    return storedGroupId;
+  } catch (error) {
+    console.error("Error loading active group from storage:", error);
+    return null;
+  }
+};
+
+// Function to save the active group to localStorage
+const saveActiveGroupToStorage = (groupId: string | null): void => {
+  try {
+    if (groupId) {
+      localStorage.setItem(STORAGE_KEY_ACTIVE_GROUP, groupId);
+    } else {
+      localStorage.removeItem(STORAGE_KEY_ACTIVE_GROUP);
+    }
+  } catch (error) {
+    console.error("Error saving active group to storage:", error);
+  }
+};
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -192,6 +219,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       await initializeDatabase();
 
       try {
+        // Get active group from storage
+        let activeGroupId = loadActiveGroupFromStorage();
+
         // Load all data
         const links = await db.table("links").toArray();
         const groups = await db.table("groups").toArray();
@@ -202,7 +232,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
           links,
           groups,
           settings,
-          activeGroupId: groups.length > 0 ? groups[0].id : null,
+          activeGroupId:
+            activeGroupId ?? (groups.length > 0 ? groups[0].id : null),
         });
 
         setIsInitialized(true);
@@ -442,6 +473,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       ...prev,
       activeGroupId: groupId,
     }));
+
+    // Save the active group to storage
+    saveActiveGroupToStorage(groupId);
   }, []);
 
   const uploadIcon = async (linkId: string, file: File) => {
