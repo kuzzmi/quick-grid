@@ -7,7 +7,8 @@ import React, {
 } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Link, Group, GridSettings, AppState } from "./types";
-import { db, initializeDatabase, getFaviconUrl } from "./db";
+import { db, initializeDatabase } from "./db";
+import { fetchFaviconAsBase64 } from "./db-utils";
 import {
   syncService,
   emitLinkAdded,
@@ -261,9 +262,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       order: maxOrder + 1,
     };
 
-    // If using favicon, set the iconUrl
+    // If using favicon, fetch it and store as base64
     if (newLink.iconType === "favicon") {
-      newLink.iconUrl = getFaviconUrl(newLink.url);
+      try {
+        newLink.iconBase64 = await fetchFaviconAsBase64(newLink.url);
+        // Clear iconUrl as we're now using iconBase64
+        newLink.iconUrl = undefined;
+      } catch (error) {
+        console.error("Error fetching favicon:", error);
+        // Keep going without the icon
+      }
     }
 
     // Save to database first
@@ -280,10 +288,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const updateLink = async (link: Link) => {
-    // If changing to favicon, update the iconUrl
-    if (link.iconType === "favicon") {
-      link.iconUrl = getFaviconUrl(link.url);
-      link.iconBase64 = undefined;
+    // If changing to favicon, fetch it and store as base64
+    if (link.iconType === "favicon" && !link.iconBase64) {
+      try {
+        link.iconBase64 = await fetchFaviconAsBase64(link.url);
+        // Clear iconUrl as we're now using iconBase64
+        link.iconUrl = undefined;
+      } catch (error) {
+        console.error("Error fetching favicon:", error);
+        // Keep going without the icon
+      }
+    } else if (link.iconType === "custom") {
+      // If switching to custom icon, keep iconBase64 (it should already be set)
+      link.iconUrl = undefined;
     }
 
     // Update in database

@@ -3,8 +3,8 @@ export interface Link {
   title: string;
   url: string;
   iconType: 'favicon' | 'custom';
-  iconUrl?: string; // For favicons
-  iconBase64?: string; // For custom icons
+  iconUrl?: string; // Deprecated: For backwards compatibility only
+  iconBase64?: string; // For both custom icons and fetched favicons (stored as base64)
   groupId: string;
   order: number;
 }

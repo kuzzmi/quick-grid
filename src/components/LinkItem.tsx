@@ -36,9 +36,19 @@ const LinkItem: React.FC<LinkItemProps> = ({
     }
   };
 
-  const getFallbackIconUrl = () => {
-    // In browser mode, use Google's favicon service
-    return `https://www.google.com/s2/favicons?domain=${new URL(link.url).hostname}&sz=128`;
+  const getIconSource = () => {
+    // Always use iconBase64 if available (for both custom and favicon types)
+    if (link.iconBase64) {
+      return link.iconBase64;
+    }
+
+    // Fallback: use iconUrl for backwards compatibility (deprecated)
+    if (link.iconUrl) {
+      return link.iconUrl;
+    }
+
+    // Final fallback: default SVG icon
+    return 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIj48L3JlY3Q+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iNCI+PC9jaXJjbGU+PC9zdmc+';
   };
 
   return (
@@ -47,25 +57,17 @@ const LinkItem: React.FC<LinkItemProps> = ({
         className={`flex justify-center items-center cursor-pointer ${getSizeClass()}`}
         onClick={handleClick}
       >
-        {link.iconType === "custom" && link.iconBase64 ? (
-          <img
-            src={link.iconBase64}
-            alt={link.title}
-            className="max-w-full max-h-full object-contain"
-          />
-        ) : (
-          <img
-            src={link.iconUrl || getFallbackIconUrl()}
-            alt={link.title}
-            className="max-w-full max-h-full object-contain"
-            onError={(e) => {
-              // Fallback if favicon loading fails
-              const target = e.target as HTMLImageElement;
-              target.src =
-                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="12" cy="12" r="4"></circle></svg>';
-            }}
-          />
-        )}
+        <img
+          src={getIconSource()}
+          alt={link.title}
+          className="max-w-full max-h-full object-contain"
+          onError={(e) => {
+            // Fallback if icon loading fails
+            const target = e.target as HTMLImageElement;
+            target.src =
+              'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIj48L3JlY3Q+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iNCI+PC9jaXJjbGU+PC9zdmc+';
+          }}
+        />
       </div>
 
       {showTitle && (

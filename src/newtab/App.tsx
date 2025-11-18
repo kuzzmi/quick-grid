@@ -216,7 +216,7 @@ const App: React.FC = () => {
       >
         <div className="flex">
           {/* Left Sidebar with Groups */}
-          <div className="w-64 bg-white dark:bg-gray-700 min-h-screen p-4 border-r border-gray-200 dark:border-gray-600 fixed">
+          <div className="w-64 bg-white dark:bg-gray-700 h-screen p-4 border-r border-gray-200 dark:border-gray-600 fixed flex flex-col">
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-xl font-bold text-gray-800 dark:text-gray-300">
                 QuickGrid
@@ -238,19 +238,21 @@ const App: React.FC = () => {
               Add Group
             </button>
 
-            <SortableContext
-              items={groupIds}
-              strategy={verticalListSortingStrategy}
-            >
-              <GroupSidebar
-                groups={sortedGroups}
-                activeGroupId={state.activeGroupId}
-                onSelectGroup={setActiveGroup}
-                onAddGroup={() => setIsAddGroupModalOpen(true)}
-                onUpdateGroup={updateGroup}
-                onDeleteGroup={deleteGroup}
-              />
-            </SortableContext>
+            <div className="flex-1 overflow-y-auto">
+              <SortableContext
+                items={groupIds}
+                strategy={verticalListSortingStrategy}
+              >
+                <GroupSidebar
+                  groups={sortedGroups}
+                  activeGroupId={state.activeGroupId}
+                  onSelectGroup={setActiveGroup}
+                  onAddGroup={() => setIsAddGroupModalOpen(true)}
+                  onUpdateGroup={updateGroup}
+                  onDeleteGroup={deleteGroup}
+                />
+              </SortableContext>
+            </div>
           </div>
 
           {/* Main Content Area - Centered */}
